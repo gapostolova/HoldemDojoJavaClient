@@ -13,11 +13,25 @@ import java.util.concurrent.TimeUnit;
 
 
 public class Client {
-    private static final String userName = "someUser";
+    private static final String userName = "Pesho";
     private static final String password = "somePassword";
 
-    private static final String SERVER = "ws://77.47.200.184:8080/ws";
+    private static final String SERVER = "ws://10.22.41.132:8080/ws";
     private org.eclipse.jetty.websocket.WebSocket.Connection connection;
+
+    private static List<Client> gameHistory;
+
+    List<Card> deskCards;
+
+    int pot;
+    String gameRound;
+
+    String dealer;
+    String mover;
+    List<String> event;
+    List<Player> players;
+
+    String cardCombination;
 
     enum Commands {
         Check, Call, Rise, Fold, AllIn
@@ -31,6 +45,14 @@ public class Client {
             this.suit = suit;
             this.value = value;
         }
+
+        @Override
+        public String toString() {
+            return "Card{" +
+                    "suit='" + suit + '\'' +
+                    ", value='" + value + '\'' +
+                    '}';
+        }
     }
 
 
@@ -41,7 +63,7 @@ public class Client {
 
         WebSocketClient client = factory.newWebSocketClient();
 
-        connection = client.open(new URI(SERVER + "?user=" + userName + "&password=" + password), new org.eclipse.jetty.websocket.WebSocket.OnTextMessage() {
+        connection = client.open(new URI(SERVER + "?user=" + userName + "&password=" + password), new WebSocket.OnTextMessage() {
             public void onOpen(Connection connection) {
                 System.out.println("Opened");
             }
@@ -52,7 +74,9 @@ public class Client {
 
             public void onMessage(String data) {
                 parseMessage(data);
-                System.out.println(data);
+
+              //  System.out.println( "#############################################################################################################################################################################################################");
+                System.out.println(data+"\n");
 
                 if (userName.equals(mover)) {
                     try {
@@ -83,21 +107,47 @@ public class Client {
             this.cards = cards;
         }
 
+        @Override
+        public String toString() {
+            return "Player{" +
+                    "name='" + name + '\'' +
+                    ", balance=" + balance +
+                    ", bet=" + bet +
+                    ", status='" + status + '\'' +
+                    ", cards=" + cards +
+                    '}';
+        }
     }
-    List<Card> deskCards;
 
-    int pot;
-    String gameRound;
-
-    String dealer;
-    String mover;
-    List<String> event;
-    List<Player> players;
-
-    String cardCombination;
 
     public Client() {
+        this.gameHistory = new ArrayList<>();
             con();
+    }
+
+    public Client(List<Card> deskCards, int pot, String gameRound, String dealer, String mover, List<String> event, List<Player> players, String cardCombination) {
+        this.deskCards = deskCards;
+        this.pot = pot;
+        this.gameRound = gameRound;
+        this.dealer = dealer;
+        this.mover = mover;
+        this.event = event;
+        this.players = players;
+        this.cardCombination = cardCombination;
+    }
+
+    @Override
+    public String toString() {
+        return "Client{" +
+                "deskCards=" + deskCards +
+                ", pot=" + pot +
+                ", gameRound='" + gameRound + '\'' +
+                ", dealer='" + dealer + '\'' +
+                ", mover='" + mover + '\'' +
+                ", event=" + event +
+                ", players=" + players +
+                ", cardCombination='" + cardCombination + '\'' +
+                '}';
     }
 
     public static void main(String[] args) {
@@ -133,6 +183,14 @@ public class Client {
         if (json.has("combination")) {
             cardCombination = json.getString("combination");
         }
+        if(!event.get(0).trim().equalsIgnoreCase("game ended")) {
+            //does not save the last round where winner is pronounced
+            gameHistory.add(new Client(deskCards, pot, gameRound, dealer, mover, event, players, cardCombination));
+        }
+        else {
+            gameHistory = new ArrayList<>();
+        }
+
     }
 
     private List<String> parseEvent(JSONArray eventJSON) {
@@ -191,6 +249,9 @@ public class Client {
     }
 
     private void doAnswer() throws IOException {
+
+
+
         connection.sendMessage(Commands.AllIn.toString());
     }
 }
