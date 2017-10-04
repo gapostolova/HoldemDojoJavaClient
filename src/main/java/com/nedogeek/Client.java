@@ -8,15 +8,16 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
 public class Client {
-    private static final String userName = "someUser";
+    private static final String userName = "Pesho";
     private static final String password = "somePassword";
 
-    private static final String SERVER = "ws://77.47.200.184:8080/ws";
+    private static final String SERVER = "ws://10.22.40.137:8080/ws";
     private org.eclipse.jetty.websocket.WebSocket.Connection connection;
 
     enum Commands {
@@ -30,6 +31,14 @@ public class Client {
         Card(String suit, String value) {
             this.suit = suit;
             this.value = value;
+        }
+
+        public String getSuit() {
+            return suit;
+        }
+
+        public String getValue() {
+            return value;
         }
     }
 
@@ -56,7 +65,7 @@ public class Client {
 
                 if (userName.equals(mover)) {
                     try {
-                        doAnswer();
+                        doAnswer(data);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -83,6 +92,17 @@ public class Client {
             this.cards = cards;
         }
 
+        public String getName() {
+            return name;
+        }
+
+        public List<Card> getCards() {
+            return cards;
+        }
+
+        public int getBalance() {
+            return balance;
+        }
     }
     List<Card> deskCards;
 
@@ -190,7 +210,58 @@ public class Client {
         return cards;
     }
 
-    private void doAnswer() throws IOException {
-        connection.sendMessage(Commands.AllIn.toString());
+    private void doAnswer(String message) throws IOException {
+//        connection.sendMessage(Commands.AllIn.toString());
+//        JSONObject json = new JSONObject(message);
+//        JSONArray players = json.getJSONArray("players");
+//
+//        JSONObject myPlayer = new JSONObject();
+//        for (int i = 0; i < players.length(); i++){
+//            JSONObject currentPlayer = new JSONObject(players.get(i).toString());
+//            if(currentPlayer.get("name").equals(mover)){
+//                myPlayer = currentPlayer;
+//                break;
+//            }
+//        }
+//        JSONArray myPlayerCards = new JSONArray(myPlayer.get("cards").toString());
+
+
+        Player myPlayer = null;
+        for(Player currentPlayer : players){
+            if(currentPlayer.getName().equalsIgnoreCase(userName)){
+                myPlayer = currentPlayer;
+                break;
+            }
+        }
+
+        Card card1 = myPlayer.getCards().get(0);
+        Card card2 = myPlayer.getCards().get(1);
+
+        System.out.println(cardCombination);
+
+        if(gameRound.equalsIgnoreCase("blind")){
+
+        }
+
+
+
+        if(card1.getValue().equalsIgnoreCase(card2.getValue())){
+//            connection.sendMessage(Commands.Rise.toString() + ",100");
+            connection.sendMessage(Commands.AllIn.toString());
+        }
+        else if(card1.getSuit().equalsIgnoreCase(card2.getSuit())){
+            connection.sendMessage(Commands.Rise.toString() + ",100");
+        }
+        else if(card1.getValue().charAt(0) > '9' || card2.getValue().charAt(0) > '9'){
+            connection.sendMessage(Commands.Rise.toString() + ",50");
+        }
+        else if(card2.getValue().charAt(0) > '9' || card2.getValue().charAt(0) > '9'){
+            connection.sendMessage(Commands.Rise.toString() + ",50");
+        }
+        else{
+            connection.sendMessage(Commands.Check.toString());
+        }
+
+
     }
 }
