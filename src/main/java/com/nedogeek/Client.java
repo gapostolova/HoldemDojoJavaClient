@@ -18,6 +18,7 @@ public class Client {
     private static final String password = "somePassword";
 
 
+
     private static final String SERVER = "ws://10.22.40.137:8080/ws";
 
     private org.eclipse.jetty.websocket.WebSocket.Connection connection;
@@ -49,7 +50,6 @@ public class Client {
             this.value = value;
         }
 
-
         public String getSuit() {
             return suit;
         }
@@ -64,7 +64,6 @@ public class Client {
                     "suit='" + suit + '\'' +
                     ", value='" + value + '\'' +
                     '}';
-
         }
     }
 
@@ -120,7 +119,6 @@ public class Client {
             this.cards = cards;
         }
 
-
         public String getName() {
             return name;
         }
@@ -145,7 +143,6 @@ public class Client {
 
         }
     }
-
 
     public Client() {
         this.gameHistory = new ArrayList<>();
@@ -274,7 +271,6 @@ public class Client {
 
         return cards;
     }
-
     
     private void doAnswer(String message) throws IOException {
 //        connection.sendMessage(Commands.AllIn.toString());
@@ -308,8 +304,6 @@ public class Client {
         if(gameRound.equalsIgnoreCase("blind")){
 
         }
-
-
 
         if(card1.getValue().equalsIgnoreCase(card2.getValue())){
 //            connection.sendMessage(Commands.Rise.toString() + ",100");
