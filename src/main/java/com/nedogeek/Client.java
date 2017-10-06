@@ -8,11 +8,31 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
 public class Client {
+
+
+    private static List<String> cardCombinations = Arrays.asList(
+            "pair",
+            "two pairs",
+            "set",
+            "straight",
+            "flash",
+            "full house",
+            "four of",
+            "straight flash",
+            "royal flash"
+    );
+
+    public static List<String> getCardCombinations() {
+        return cardCombinations;
+    }
+
     private static final String userName = "Ronaldo";
     private static final String password = "somePassword";
 
@@ -35,6 +55,10 @@ public class Client {
     Player myPlayer;
 
     String cardCombination;
+
+    private List<Player> getPlayers(){
+        return players;
+    }
 
     enum Commands {
         Check, Call, Rise, Fold, AllIn
@@ -78,18 +102,18 @@ public class Client {
 
         connection = client.open(new URI(SERVER + "?user=" + userName + "&password=" + password), new WebSocket.OnTextMessage() {
             public void onOpen(Connection connection) {
-                System.out.println("Opened");
+//                System.out.println("Opened");
             }
 
             public void onClose(int closeCode, String message) {
-                System.out.println("Closed");
+//                System.out.println("Closed");
             }
 
             public void onMessage(String data) {
                 parseMessage(data);
 
               //  System.out.println( "#############################################################################################################################################################################################################");
-                System.out.println(data+"\n");
+//                System.out.println(data+"\n");
 
                 if (userName.equals(mover)) {
                     try {
@@ -107,11 +131,12 @@ public class Client {
 
     class Player {
 
-        final String name;
-        final int balance;
-        final int bet;
-        final String status;
-        final List<Card> cards;
+        private final String name;
+        private final int balance;
+        private final int bet;
+        private final String status;
+        private final List<Card> cards;
+
         Player(String name, int balance, int bet, String status, List<Card> cards) {
             this.name = name;
             this.balance = balance;
@@ -133,6 +158,13 @@ public class Client {
             return balance;
         }
 
+        private int getBet(){
+            return bet;
+        }
+
+        private String getStatus(){
+            return status;
+        }
         @Override
         public String toString() {
             return "Player{" +
@@ -281,13 +313,94 @@ public class Client {
     }
 
 
+
+
     private void doAnswer(String message) throws IOException {
         Card card1 = myPlayer.getCards().get(0);
         Card card2 = myPlayer.getCards().get(1);
 
+        boolean hasBigRiseOnTheTable = false;
 
-//        int percentageToWin = PreFlopChance.calculatePercentageToWin(card1, card2, cardCombination);
+        for(Player currentPlayer : players){
+            if(currentPlayer.getBet() > 0) {
+                if (myPlayer.getBalance() / currentPlayer.getBet() < 7) {
+                    hasBigRiseOnTheTable = true;
+                    break;
+                }
+            }
+        }
+
+        System.out.println(card1.getValue() + card1.getSuit() + " " + card2.getValue() + card2.getSuit());
+        System.out.println();
+//        System.out.println("\n #########################################################################################");
+//       System.out.println(hasMadeBetPreviousRound() + "\n");
+        if(gameRound.equalsIgnoreCase("blind")){
 
 
+            if((PreFlopLogic.hasPair(card1, card2) || PreFlopLogic.hasPairSuit(card1, card2) || PreFlopLogic.hasChanceForStraight(card1, card2)) && !hasBigRiseOnTheTable){
+
+                connection.sendMessage(Commands.Call.toString());
+//                Random randomGenerator = new Random();
+//                int riseChance = randomGenerator.nextInt(100);
+//                if(riseChance < 20){
+//                    //TODO rise only if you didn't rised this turn, else just call
+//                    double riseAmount = (double)myPlayer.getBalance() / 20.0;
+//                    connection.sendMessage("Rise," + riseAmount);
+//                }
+            }
+            else {
+                connection.sendMessage(Commands.Check.toString());
+            }
+        }
+        else{
+            int handPower = FlopLogic.getCombinationPower(cardCombination);
+
+            if(handPower >= 4 ){
+                connection.sendMessage(Commands.AllIn.toString());
+            }
+            else if(handPower >= 1 && handPower < 4 && !hasBigRiseOnTheTable){
+                //TODO if no one has rised
+                double multiplicationNumber = (double) myPlayer.getBalance() / 20.0;
+                connection.sendMessage(Commands.Rise.toString() + "," + (multiplicationNumber * handPower));
+            }
+            else {
+                connection.sendMessage(Commands.Check.toString());
+            }
+        }
+
+
+
+    }
+
+
+    //returns true if any player in the previous 2 orbits has had status "rise" or "all in" and the money he bet were more than 0
+    //any of the players including me
+    public Boolean hasMadeBetPreviousRound(){
+        int numberOfPlayers = players.size();
+            //for every player that has played before me
+            //but every player's turn has at least 1 save in the collection and maximum 2
+            for(int i = 0; i < numberOfPlayers*2; i++){
+                int indexOfSave = gameHistory.size()-1 - i;
+
+                //if this index exists in the list
+                if(gameHistory.size() > 0 && indexOfSave>0 ){
+                    //check if he has made a bet
+                    if(hasRose(gameHistory.get(indexOfSave).getPlayers())){
+                        return true;
+                    }
+                }
+            }
+       return false;
+    }
+
+    private boolean hasRose(List<Player> players){
+//        System.out.println("\n has rose \n");
+        for(Player player : players){
+            if(player.getBet()>0 && (player.status.equalsIgnoreCase("rise") || player.status.equalsIgnoreCase("AllIn"))){
+//                System.out.println(player);
+                return true;
+            }
+        }
+        return false;
     }
 }
