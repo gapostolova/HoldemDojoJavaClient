@@ -342,7 +342,7 @@ public class Client {
         System.out.println(card1.getValue() + card1.getSuit() + " " + card2.getValue() + card2.getSuit());
         System.out.println();
 
-        System.out.println(hasMadeBetPreviousRound());
+        System.out.println(hasMadeBetPreviousRound(""));
 
         if(gameRound.equalsIgnoreCase("blind")){
 
@@ -408,19 +408,21 @@ public class Client {
 
     private boolean hasRose(List<Player> players, String username){
 //        System.out.println("\n has rose \n");
-        for(Player player : players){
-            if(username.equalsIgnoreCase("")){
-                if(player.getBet()>0 && (player.status.equalsIgnoreCase("rise") || player.status.equalsIgnoreCase("AllIn"))){
+        for(Player player : players) {
+            if (username.equalsIgnoreCase("")) {
+                if (player.getBet() > 0 && (player.status.equalsIgnoreCase("rise") || player.status.equalsIgnoreCase("AllIn"))) {
                     System.out.println(player);
                     return true;
-             }
-             else{
-                    if(player.name.equalsIgnoreCase(username) &&  player.getBet()>0 && (player.status.equalsIgnoreCase("rise") || player.status.equalsIgnoreCase("AllIn"))){
+                } else {
+                    if (player.name.equalsIgnoreCase(username) && player.getBet() > 0 && (player.status.equalsIgnoreCase("rise") || player.status.equalsIgnoreCase("AllIn"))) {
                         System.out.println(player);
                         return true;
+                    }
                 }
 
+            }
         }
         return false;
     }
+
 }
