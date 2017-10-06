@@ -13,13 +13,16 @@ import java.util.concurrent.TimeUnit;
 
 
 public class Client {
-    private static final String userName = "Pesho";
+    private static final String userName = "Vanko1";
     private static final String password = "somePassword";
 
-    private static final String SERVER = "ws://10.22.41.132:8080/ws";
+   // private static final String SERVER = "ws://10.22.41.132:8080/ws";
+    private static final String SERVER = "ws://10.22.40.137:8080/ws";
+
     private org.eclipse.jetty.websocket.WebSocket.Connection connection;
 
     private static List<Client> gameHistory;
+    private ArrayList<GameSimple> simpleGameHistory;
 
     List<Card> deskCards;
 
@@ -33,27 +36,19 @@ public class Client {
 
     String cardCombination;
 
+    private List<String> getEvent(){
+        return event;
+    }
+
+    private String getMover(){
+        return  mover;
+    }
+
+
     enum Commands {
         Check, Call, Rise, Fold, AllIn
     }
 
-    class Card {
-        final String suit;
-        final String value;
-
-        Card(String suit, String value) {
-            this.suit = suit;
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return "Card{" +
-                    "suit='" + suit + '\'' +
-                    ", value='" + value + '\'' +
-                    '}';
-        }
-    }
 
 
     private void con() {
@@ -92,36 +87,12 @@ public class Client {
         }
     }
 
-    class Player {
 
-        final String name;
-        final int balance;
-        final int bet;
-        final String status;
-        final List<Card> cards;
-        Player(String name, int balance, int bet, String status, List<Card> cards) {
-            this.name = name;
-            this.balance = balance;
-            this.bet = bet;
-            this.status = status;
-            this.cards = cards;
-        }
-
-        @Override
-        public String toString() {
-            return "Player{" +
-                    "name='" + name + '\'' +
-                    ", balance=" + balance +
-                    ", bet=" + bet +
-                    ", status='" + status + '\'' +
-                    ", cards=" + cards +
-                    '}';
-        }
-    }
 
 
     public Client() {
         this.gameHistory = new ArrayList<>();
+        this.simpleGameHistory = new ArrayList<>();
             con();
     }
 
@@ -186,8 +157,13 @@ public class Client {
         if(!event.get(0).trim().equalsIgnoreCase("game ended")) {
             //does not save the last round where winner is pronounced
             gameHistory.add(new Client(deskCards, pot, gameRound, dealer, mover, event, players, cardCombination));
+
         }
         else {
+//            System.out.println("#############################################################################################################################################################################################################");
+//            System.out.println(simpleGameHistory.toString());
+//            System.out.println("#############################################################################################################################################################################################################");
+
             gameHistory = new ArrayList<>();
         }
 
@@ -230,10 +206,43 @@ public class Client {
             }
 
             players.add(new Player(name, balance, bet, status, cards));
+         //   simpleGameHistory.add(new GameSimple(name, status, bet));
         }
 
         return players;
     }
+
+    //contains all of the data for every player in every turn
+    class GameSimple{
+
+        private String player;
+        private String status;
+        private int rase;
+
+        GameSimple(String player, String status, int rase){
+            this.player = player;
+            this.rase = rase;
+            this.status = status;
+
+        }
+
+        @Override
+        public String toString() {
+            return "GameSimple{" +
+                    "player='" + player + '\'' +
+                    ", status='" + status + '\'' +
+                    ", rase=" + rase +
+                    '}';
+        }
+
+    }
+//    private HashMap previousPlayersBehaviour(){
+//        HashMap<String, GameSimple> game = new HashMap<>();
+//        for(Client client : gameHistory){
+//            String playerName = client.getMover();
+//        //    GameSimple gameSimple = new GameSimple(client.getMover(), client.)
+//        }
+//    }
 
     private List<Card> parseCards(JSONArray cardsJSON) {
         List<Card> cards = new ArrayList<>();
@@ -250,8 +259,26 @@ public class Client {
 
     private void doAnswer() throws IOException {
 
+        if(cardCombination.toLowerCase().contains("Straight flash".toLowerCase())){
+            connection.sendMessage(Commands.AllIn.toString());
+        }
 
+        double a = Math.random();
+        if(a>5 && a<10){
+            connection.sendMessage(Commands.Fold.toString());
+        }
+        else
+            if(a>10 && a <30){
+                connection.sendMessage(Commands.Call.toString());
+            }
+            else if(a>30 && a<90) {
+                connection.sendMessage(Commands.Check.toString());
+            }
 
-        connection.sendMessage(Commands.AllIn.toString());
+        else
+                if(a<90 && a > 50 ){
+        connection.sendMessage(Commands.Rise.toString());
+    }
+
     }
 }
