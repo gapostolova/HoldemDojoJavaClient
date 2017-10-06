@@ -8,21 +8,22 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
 public class Client {
-    private static final String userName = "Vanko1";
+    private static final String userName = "Pesho";
     private static final String password = "somePassword";
 
-   // private static final String SERVER = "ws://10.22.41.132:8080/ws";
+
+
     private static final String SERVER = "ws://10.22.40.137:8080/ws";
 
     private org.eclipse.jetty.websocket.WebSocket.Connection connection;
 
     private static List<Client> gameHistory;
-    private ArrayList<GameSimple> simpleGameHistory;
 
     List<Card> deskCards;
 
@@ -36,19 +37,35 @@ public class Client {
 
     String cardCombination;
 
-    private List<String> getEvent(){
-        return event;
-    }
-
-    private String getMover(){
-        return  mover;
-    }
-
-
     enum Commands {
         Check, Call, Rise, Fold, AllIn
     }
 
+    class Card {
+        final String suit;
+        final String value;
+
+        Card(String suit, String value) {
+            this.suit = suit;
+            this.value = value;
+        }
+
+        public String getSuit() {
+            return suit;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "Card{" +
+                    "suit='" + suit + '\'' +
+                    ", value='" + value + '\'' +
+                    '}';
+        }
+    }
 
 
     private void con() {
@@ -56,44 +73,80 @@ public class Client {
         try {
             factory.start();
 
-        WebSocketClient client = factory.newWebSocketClient();
+            WebSocketClient client = factory.newWebSocketClient();
 
-        connection = client.open(new URI(SERVER + "?user=" + userName + "&password=" + password), new WebSocket.OnTextMessage() {
-            public void onOpen(Connection connection) {
-                System.out.println("Opened");
-            }
+            connection = client.open(new URI(SERVER + "?user=" + userName + "&password=" + password), new WebSocket.OnTextMessage() {
+                public void onOpen(Connection connection) {
+                    System.out.println("Opened");
+                }
 
-            public void onClose(int closeCode, String message) {
-                System.out.println("Closed");
-            }
+                public void onClose(int closeCode, String message) {
+                    System.out.println("Closed");
+                }
 
-            public void onMessage(String data) {
-                parseMessage(data);
+                public void onMessage(String data) {
+                    parseMessage(data);
 
-              //  System.out.println( "#############################################################################################################################################################################################################");
-                System.out.println(data+"\n");
+                    //  System.out.println( "#############################################################################################################################################################################################################");
+                    System.out.println(data+"\n");
 
-                if (userName.equals(mover)) {
-                    try {
-                        doAnswer();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    if (userName.equals(mover)) {
+                        try {
+                            doAnswer(data);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
-        }).get(500, TimeUnit.MILLISECONDS);
+            }).get(500, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    class Player {
 
+        final String name;
+        final int balance;
+        final int bet;
+        final String status;
+        final List<Card> cards;
+        Player(String name, int balance, int bet, String status, List<Card> cards) {
+            this.name = name;
+            this.balance = balance;
+            this.bet = bet;
+            this.status = status;
+            this.cards = cards;
+        }
 
+        public String getName() {
+            return name;
+        }
+
+        public List<Card> getCards() {
+            return cards;
+        }
+
+        public int getBalance() {
+            return balance;
+        }
+
+        @Override
+        public String toString() {
+            return "Player{" +
+                    "name='" + name + '\'' +
+                    ", balance=" + balance +
+                    ", bet=" + bet +
+                    ", status='" + status + '\'' +
+                    ", cards=" + cards +
+                    '}';
+
+        }
+    }
 
     public Client() {
         this.gameHistory = new ArrayList<>();
-        this.simpleGameHistory = new ArrayList<>();
-            con();
+        con();
     }
 
     public Client(List<Card> deskCards, int pot, String gameRound, String dealer, String mover, List<String> event, List<Player> players, String cardCombination) {
@@ -157,13 +210,8 @@ public class Client {
         if(!event.get(0).trim().equalsIgnoreCase("game ended")) {
             //does not save the last round where winner is pronounced
             gameHistory.add(new Client(deskCards, pot, gameRound, dealer, mover, event, players, cardCombination));
-
         }
         else {
-//            System.out.println("#############################################################################################################################################################################################################");
-//            System.out.println(simpleGameHistory.toString());
-//            System.out.println("#############################################################################################################################################################################################################");
-
             gameHistory = new ArrayList<>();
         }
 
@@ -206,43 +254,10 @@ public class Client {
             }
 
             players.add(new Player(name, balance, bet, status, cards));
-         //   simpleGameHistory.add(new GameSimple(name, status, bet));
         }
 
         return players;
     }
-
-    //contains all of the data for every player in every turn
-    class GameSimple{
-
-        private String player;
-        private String status;
-        private int rase;
-
-        GameSimple(String player, String status, int rase){
-            this.player = player;
-            this.rase = rase;
-            this.status = status;
-
-        }
-
-        @Override
-        public String toString() {
-            return "GameSimple{" +
-                    "player='" + player + '\'' +
-                    ", status='" + status + '\'' +
-                    ", rase=" + rase +
-                    '}';
-        }
-
-    }
-//    private HashMap previousPlayersBehaviour(){
-//        HashMap<String, GameSimple> game = new HashMap<>();
-//        for(Client client : gameHistory){
-//            String playerName = client.getMover();
-//        //    GameSimple gameSimple = new GameSimple(client.getMover(), client.)
-//        }
-//    }
 
     private List<Card> parseCards(JSONArray cardsJSON) {
         List<Card> cards = new ArrayList<>();
@@ -257,28 +272,55 @@ public class Client {
         return cards;
     }
 
-    private void doAnswer() throws IOException {
+    private void doAnswer(String message) throws IOException {
+//        connection.sendMessage(Commands.AllIn.toString());
+//        JSONObject json = new JSONObject(message);
+//        JSONArray players = json.getJSONArray("players");
+//
+//        JSONObject myPlayer = new JSONObject();
+//        for (int i = 0; i < players.length(); i++){
+//            JSONObject currentPlayer = new JSONObject(players.get(i).toString());
+//            if(currentPlayer.get("name").equals(mover)){
+//                myPlayer = currentPlayer;
+//                break;
+//            }
+//        }
+//        JSONArray myPlayerCards = new JSONArray(myPlayer.get("cards").toString());
 
-        if(cardCombination.toLowerCase().contains("Straight flash".toLowerCase())){
+
+        Player myPlayer = null;
+        for(Player currentPlayer : players){
+            if(currentPlayer.getName().equalsIgnoreCase(userName)){
+                myPlayer = currentPlayer;
+                break;
+            }
+        }
+
+        Card card1 = myPlayer.getCards().get(0);
+        Card card2 = myPlayer.getCards().get(1);
+
+        System.out.println(cardCombination);
+
+        if(gameRound.equalsIgnoreCase("blind")){
+
+        }
+
+        if(card1.getValue().equalsIgnoreCase(card2.getValue())){
+//            connection.sendMessage(Commands.Rise.toString() + ",100");
             connection.sendMessage(Commands.AllIn.toString());
         }
-
-        double a = Math.random();
-        if(a>5 && a<10){
-            connection.sendMessage(Commands.Fold.toString());
+        else if(card1.getSuit().equalsIgnoreCase(card2.getSuit())){
+            connection.sendMessage(Commands.Rise.toString() + ",100");
         }
-        else
-            if(a>10 && a <30){
-                connection.sendMessage(Commands.Call.toString());
-            }
-            else if(a>30 && a<90) {
-                connection.sendMessage(Commands.Check.toString());
-            }
-
-        else
-                if(a<90 && a > 50 ){
-        connection.sendMessage(Commands.Rise.toString());
-    }
+        else if(card1.getValue().charAt(0) > '9' || card2.getValue().charAt(0) > '9'){
+            connection.sendMessage(Commands.Rise.toString() + ",50");
+        }
+        else if(card2.getValue().charAt(0) > '9' || card2.getValue().charAt(0) > '9'){
+            connection.sendMessage(Commands.Rise.toString() + ",50");
+        }
+        else{
+            connection.sendMessage(Commands.Check.toString());
+        }
 
     }
 }
