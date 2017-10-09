@@ -35,7 +35,6 @@ public class Client {
 
 
     private static final String SERVER = "ws://10.22.40.111:8080/ws";
-
     private org.eclipse.jetty.websocket.WebSocket.Connection connection;
 
     private static List<Client> gameHistory;
@@ -210,7 +209,7 @@ public class Client {
     }
 
     public static void main(String[] args) {
-      //  new Client();
+        new Client();
 
     }
 
@@ -404,6 +403,25 @@ public class Client {
 
             }
         }
+        else if(gameRound.equalsIgnoreCase("four_cards"))
+        {
+            System.out.println("TURN");
+            this.makeTurnMove();
+        }
+    }
+
+    private boolean checkForPairOnBoard(){
+        for(int i=0; i<this.deskCards.size()-1; i++)
+        {
+            Card currentCard = this.deskCards.get(i);
+            for(int j=1; j<this.deskCards.size(); j++)
+            if(currentCard.value == this.deskCards.get(j).value)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     //count people that have been played before us
@@ -434,44 +452,45 @@ public class Client {
     }
 
     private void makeTurnMove() throws IOException{
-        //TODO: if we have top pair or stronger hand we continue to play in other case check/fold
         int handPower = FlopLogic.getCombinationPower(cardCombination);
         Map<String, Integer> actions = this.countRaisersAndCallers();
         int risers = actions.get("risers");
         int callers = actions.get("callers");
         int allIn = actions.get("allIn");
+        String command = Commands.Fold.toString();
 
-        if(handPower == 0)
+        System.out.println("Hand " + handPower);
+        System.out.println("Is there pair on the board " +  this.checkForPairOnBoard());
+        System.out.println("risers " + risers + ", callers " + risers + ", allIn " + risers);
+        System.out.println("Board " + deskCards);
+
+        if(handPower == 0 || (handPower == 1 && this.checkForPairOnBoard()))
         {
-            if(risers > 0 || callers> 0 || allIn >0 )
-            {
-                connection.sendMessage(Commands.Fold.toString());
-            }
-            else
-            {
-                connection.sendMessage(Commands.Check.toString());
+            if(risers == 0 && callers == 0 && allIn == 0 ) {
+                command =Commands.Check.toString();
             }
         }
-        else if (handPower == 1) {
+        //TODO: add check if pair is with the biggest card on the board or stronger
+        else if ((handPower == 1 && !this.checkForPairOnBoard()) || (handPower == 2 && this.checkForPairOnBoard())){
             if(risers == 0 && callers == 0 && allIn == 0 ) {
-                connection.sendMessage(Commands.Rise.toString()+ "," + (0.5*pot));
+                command = Commands.Rise.toString()+ "," + (0.5*pot);
             }
             else if(risers == 1 && callers == 0 && allIn == 0) {
-                connection.sendMessage(Commands.Call.toString());
-            }
-            else {
-                connection.sendMessage(Commands.Fold.toString());
+                command = Commands.Call.toString();
             }
         }
-        else if(handPower > 2)
+        else if(handPower > 1)
         {
             if(risers == 0 && callers == 0 && allIn == 0 )            {
-                connection.sendMessage(Commands.Rise.toString()+ "," + (0.5*pot));
+                command =Commands.Rise.toString()+ "," + (0.5*pot);
             }
             else {
-                connection.sendMessage(Commands.AllIn.toString());
+                command =Commands.AllIn.toString();
             }
         }
+
+        System.out.println("Command: " + command);
+        connection.sendMessage(command);
     }
 
     private void doAnswer2(String message) throws IOException {
