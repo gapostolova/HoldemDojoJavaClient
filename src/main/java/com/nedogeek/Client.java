@@ -209,7 +209,15 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        new Client();
+//        new Client();
+        ArrayList<String> cards = new ArrayList<>();
+        cards.add("7");
+        cards.add("3");
+        cards.add("9");
+        cards.add("Q");
+        cards.add("5");
+        cards.add("A");
+        System.out.println(FlopLogic.sequentialCards(cards));
     }
 
     private void parseMessage(String message) {
