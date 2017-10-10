@@ -214,6 +214,17 @@ public class Client {
 
     public static void main(String[] args) {
       //  new Client();
+        ArrayList<String> cards = new ArrayList<>();
+
+        cards.add("2");
+
+        cards.add("3");
+        cards.add("J");
+        cards.add("Q");
+        cards.add("K");
+        cards.add("A");
+//       cards.add("4");
+        System.out.println(FlopLogic.sequentialCards(cards));
 
     }
 
@@ -406,6 +417,9 @@ public class Client {
                 //TODO:
 
             }
+        }
+        else if(gameRound.equalsIgnoreCase("four_cards")){
+
         }
 
     }
