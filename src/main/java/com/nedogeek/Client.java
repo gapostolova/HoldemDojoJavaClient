@@ -7,10 +7,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -38,7 +35,6 @@ public class Client {
 
 
     private static final String SERVER = "ws://10.22.40.111:8080/ws";
-
     private org.eclipse.jetty.websocket.WebSocket.Connection connection;
 
     private static List<Client> gameHistory;
@@ -213,19 +209,7 @@ public class Client {
     }
 
     public static void main(String[] args) {
-      //  new Client();
-        ArrayList<String> cards = new ArrayList<>();
-
-        cards.add("2");
-
-        cards.add("3");
-        cards.add("J");
-        cards.add("Q");
-        cards.add("K");
-        cards.add("A");
-//       cards.add("4");
-        System.out.println(FlopLogic.sequentialCards(cards));
-
+        new Client();
     }
 
     private void parseMessage(String message) {
@@ -418,10 +402,95 @@ public class Client {
 
             }
         }
-        else if(gameRound.equalsIgnoreCase("four_cards")){
 
+        else if(gameRound.equalsIgnoreCase("four_cards"))
+        {
+            System.out.println("TURN");
+            this.makeTurnMove();
+        }
+    }
+
+    private boolean checkForPairOnBoard(){
+        for(int i=0; i<this.deskCards.size()-1; i++)
+        {
+            Card currentCard = this.deskCards.get(i);
+            for(int j=1; j<this.deskCards.size(); j++)
+            if(currentCard.value == this.deskCards.get(j).value)
+            {
+                return true;
+            }
         }
 
+        return false;
+    }
+
+    //count people that have been played before us
+    private Map<String,Integer> countRaisersAndCallers(){
+        Map<String,Integer> results = new HashMap<String, Integer>();
+
+        int risers = 0;
+        int callers = 0; //people that made call after rise of another person
+        int allIn = 0;
+        for (Player player : this.players) {
+            if (player.getStatus().equalsIgnoreCase("rise")) {
+                risers++;
+            }
+            else if(player.status.equalsIgnoreCase("call") && risers>0)
+            {
+                callers++;
+            }
+            else if (player.getStatus().equalsIgnoreCase("allin")) {
+                allIn++;
+            }
+        }
+
+        results.put("risers", risers);
+        results.put("callers", callers);
+        results.put("allIn", allIn);
+
+        return results;
+    }
+
+    private void makeTurnMove() throws IOException{
+        int handPower = FlopLogic.getCombinationPower(cardCombination);
+        Map<String, Integer> actions = this.countRaisersAndCallers();
+        int risers = actions.get("risers");
+        int callers = actions.get("callers");
+        int allIn = actions.get("allIn");
+        String command = Commands.Fold.toString();
+
+        System.out.println("Hand " + handPower);
+        System.out.println("Is there pair on the board " +  this.checkForPairOnBoard());
+        System.out.println("risers " + risers + ", callers " + risers + ", allIn " + risers);
+        System.out.println("Board " + deskCards);
+
+        if(handPower == 0 || (handPower == 1 && this.checkForPairOnBoard()))
+        {
+            if(risers == 0 && callers == 0 && allIn == 0 ) {
+                command =Commands.Check.toString();
+            }
+        }
+        //TODO: add check if pair is with the biggest card on the board or stronger
+        else if ((handPower == 1 && !this.checkForPairOnBoard()) || (handPower == 2 && this.checkForPairOnBoard())){
+            if(risers == 0 && callers == 0 && allIn == 0 ) {
+                command = Commands.Rise.toString()+ "," + (0.5*pot);
+            }
+            else if(risers == 1 && callers == 0 && allIn == 0) {
+                command = Commands.Call.toString();
+            }
+        }
+        else if(handPower > 1)
+        {
+            if(risers == 0 && callers == 0 && allIn == 0 )            {
+                command =Commands.Rise.toString()+ "," + (0.5*pot);
+            }
+            else {
+                command =Commands.AllIn.toString();
+            }
+        }
+
+        System.out.println("Command: " + command);
+        connection.sendMessage(command);
     }
 
     private void doAnswer2(String message) throws IOException {
