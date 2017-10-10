@@ -22,9 +22,6 @@ public class FlopLogic {
     }
 
     public static boolean hasStraightFlush(List<Client.Card> deskCards, List<Client.Card> playerCards){
-
-
-
           return true;
     }
 
