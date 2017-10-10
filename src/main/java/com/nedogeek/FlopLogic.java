@@ -128,8 +128,10 @@ public class FlopLogic {
 
         ArrayList<Integer> biggestSequel = new ArrayList<>();
         ArrayList<Integer> biggestSequelIndexes = biggestSequence(matrixOfIndexes);
-        for(int i = biggestSequelIndexes.get(0); i<=biggestSequelIndexes.get(1); i++){
-            biggestSequel.add(cardIntexes.get(i));
+        if(!biggestSequelIndexes.isEmpty()) {
+            for (int i = biggestSequelIndexes.get(0); i <= biggestSequelIndexes.get(1); i++) {
+                biggestSequel.add(cardIntexes.get(i));
+            }
         }
         return biggestSequel;
     }
@@ -138,16 +140,23 @@ public class FlopLogic {
     //calculates on which indexes the cards have greater sequence  { (1,3,2) } -> {(startIdx, endIdx, startIdx-endIdx+1)}
     private static ArrayList<Integer> biggestSequence(ArrayList<ArrayList<Integer>> values){
         int maxElement = 0;
-        int index = 0;
+        int index = -1;
+
 
         for(int i = 0; i < values.size(); i ++){
             int startEndCalculation = values.get(i).get(2);
+            if(startEndCalculation == 1){
+                continue;
+            }
             if(startEndCalculation > maxElement){
                 maxElement = startEndCalculation;
                 index = i;
             }
         }
 
+        if(index == -1){
+            return new ArrayList<>();
+        }
         return values.get(index);
     }
 
