@@ -31,15 +31,18 @@ public class FlopLogic {
      *      3 sequential cards
      * @return
      */
-    public static boolean dangerousFlop(List<Client.Card> deskCards){
+    public static boolean dangerousFlop(List<Client.Card> deskCards, int numberOfsequentialCards){
         List<String> cardValue = new ArrayList<>();
         List<String> cardsSuit = new ArrayList<>();
         for(Client.Card card : deskCards){
             cardValue.add(card.getValue());
             cardsSuit.add(card.suit);
         }
+        if(cardValue.size() > numberOfsequentialCards){
+            return false;
+        }
 
-        if(sameSuit(cardsSuit) || sequentialCards(cardValue) == 3){
+        if(sameSuit(cardsSuit) || sequentialCards(cardValue) == numberOfsequentialCards){
             return false;
         }
         return true;
