@@ -98,8 +98,8 @@ public class FlopLogic {
 
 
         Collections.sort(sequentialCardIndexes);
-        System.out.println("Sequential Card Indexes: ");
-        System.out.println(sequentialCardIndexes);
+//        System.out.println("Sequential Card Indexes: ");
+//        System.out.println(sequentialCardIndexes);
             return sequentialListOfIndexes(sequentialCardIndexes).size();
         }
 
@@ -180,8 +180,8 @@ public class FlopLogic {
             }
         }
 
-        System.out.println("****************************");
-        System.out.println(longestSequentialCardIndexes(newList));
+//        System.out.println("****************************");
+//        System.out.println(longestSequentialCardIndexes(newList));
         return longestSequentialCardIndexes(newList);
 
     }

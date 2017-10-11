@@ -45,8 +45,8 @@ public class PreFlopLogic {
         String card1Value = card1.getValue();
         String card2Value = card2.getValue();
 
-        return card1Value.equalsIgnoreCase("K") && (cardsOrder.indexOf(card2Value) >= cardsOrder.indexOf(strongCardRange)) ||
-                (cardsOrder.indexOf(card1Value) >= cardsOrder.indexOf(strongCardRange)) && card2Value.equalsIgnoreCase("K");
+        return (card1Value.equalsIgnoreCase("K") && (cardsOrder.indexOf(card2Value) >= cardsOrder.indexOf(strongCardRange))) ||
+                ((cardsOrder.indexOf(card1Value) >= cardsOrder.indexOf(strongCardRange)) && card2Value.equalsIgnoreCase("K"));
     }
 
     public static boolean hasCardsStrongerThan(Client.Card card1, Client.Card card2, String range){
