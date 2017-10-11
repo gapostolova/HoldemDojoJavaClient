@@ -343,7 +343,10 @@ public class Client {
                     someoneAllIn = true;
                 }
             }
-            if (riseAmount == 0 && (PreFlopLogic.hasAce(card1, card2) || PreFlopLogic.hasPair(card1, card2) || (PreFlopLogic.hasChanceForStraight(card1, card2) && PreFlopLogic.hasPairSuit(card1, card2)))) {
+            //if there is no raise before us, we bet Ax+, KJ+, 22+, two from one suit and two strong sequential cards (QJ+)
+            if (riseAmount == 0 && (PreFlopLogic.hasAce(card1, card2) || PreFlopLogic.hasKingAndStrongCard(card1, card2, "J") || PreFlopLogic.hasPair(card1, card2) ||
+                    (PreFlopLogic.hasChanceForStraight(card1, card2) && PreFlopLogic.hasCardsStrongerThan(card1, card2, "J")) ||
+                    PreFlopLogic.hasPairSuit(card1, card2))) {
                 connection.sendMessage(Commands.Rise.toString() + ",100");
             }
             //if there is bet check if it's a "all-in" play "all-in" also with QQ+, AK
@@ -355,7 +358,10 @@ public class Client {
                 Random r = new Random();
                 int randomRise = r.nextInt(3) + 1;
                 connection.sendMessage(Commands.Rise.toString() + "," + (riseAmount * randomRise));
-
+            }
+            else if(myPlayer.getBalance() / 5 >= riseAmount && (PreFlopLogic.hasAceAndStrongCard(card1, card2, "J") || PreFlopLogic.hasKingAndStrongCard(card1, card2, "Q") ||
+                    PreFlopLogic.hasHandStrongerThan(card1, card2, "9") || (PreFlopLogic.hasCardsStrongerThan(card1, card2, "8") && PreFlopLogic.hasPairSuit(card1, card2)))){
+                connection.sendMessage(Commands.Call.toString());
             }
             // get bet value, if bet value is more than 20% from your balance play "all-in" with QQ+, AK
             else if (myPlayer.getBalance() / 5 < riseAmount && (PreFlopLogic.hasHandStrongerThan(card1, card2, "Q") || PreFlopLogic.hasAceAndStrongCard(card1, card2, "K"))) {
