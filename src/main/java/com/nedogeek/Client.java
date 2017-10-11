@@ -399,7 +399,7 @@ public class Client {
             int riseAmount = 0;
             boolean someoneHasRaised = false;
             for (Player player : players) {
-                if (player.getBet() - 20 > riseAmount && player.status.equalsIgnoreCase("rise")) {
+                if (player.getBet() > riseAmount && player.status.equalsIgnoreCase("rise")) {
                     riseAmount = player.getBet();
                     someoneHasRaised = true;
                 }
@@ -410,13 +410,18 @@ public class Client {
 
 
             //TODO: if hand is set or stronger, check if there is raise before us call, if there is no raise bet half pot
-            if (handPower > 2) {
+            if (handPower == 3) {
                 //TODO: extract method from this code: check if there is raise before us call, if there is no raise bet half pot
                 if (someoneHasRaised) {
                     call();
                 } else {
-                    rise(pot * 0.5);;
+                    rise(pot);;
                 }
+            }
+
+            else if (handPower > 3) {
+                //TODO: extract method from this code: check if there is raise before us call, if there is no raise bet half pot
+                rise(pot * 2);
             }
 
             //TODO: if there is pair on board and we have handPower = 2 then play hand like we have only one pair, if we have handPower = 1 then check/fold
@@ -425,12 +430,8 @@ public class Client {
             }
 
             //TODO: if there is no pair on the board, handPower = 2 plays like handPower>2; handPower = 1 then play it like it ;D
-            else if (handPower == 2 && !hasPairOnBoard) {
-                if (someoneHasRaised) {
-                    call();
-                } else {
-                    rise(pot * 0.5);
-                }
+            else if (handPower == 2 && !hasPairOnBoard && !FlopLogic.dangerousFlop2(deskCards)) {
+                rise(pot * 2);
             } else if (handPower == 1 && hasPairOnBoard) {
                 check();
             } else if (handPower == 1 && !hasPairOnBoard) {
@@ -476,12 +477,96 @@ public class Client {
         }
         else if (gameRound.equalsIgnoreCase("four_cards")) {
 //            System.out.println("TURN");
-            this.makeTurnMove();
+//            this.makeTurnMove();
+
+            int handPower = FlopLogic.getCombinationPower(cardCombination);
+            System.out.println("Hand Power: " + handPower);
+            int riseAmount = 0;
+            boolean someoneHasRaised = false;
+            for (Player player : players) {
+                if (player.getBet() > riseAmount && player.status.equalsIgnoreCase("rise")) {
+                    riseAmount = player.getBet();
+                    someoneHasRaised = true;
+                }
+            }
+            boolean hasPairOnBoard = hasPairOnBoard();
+
+
+
+
+            //TODO: if hand is set or stronger, check if there is raise before us call, if there is no raise bet half pot
+            if (handPower == 3) {
+                //TODO: extract method from this code: check if there is raise before us call, if there is no raise bet half pot
+                if (someoneHasRaised) {
+                    call();
+                } else {
+                    rise(pot);;
+                }
+            }
+
+            else if (handPower > 3) {
+                //TODO: extract method from this code: check if there is raise before us call, if there is no raise bet half pot
+                rise(pot * 2);
+            }
+
+            //TODO: if there is pair on board and we have handPower = 2 then play hand like we have only one pair, if we have handPower = 1 then check/fold
+            else if (handPower == 2 && hasPairOnBoard) {
+                playPair(hasPairOnBoard);
+            }
+
+            //TODO: if there is no pair on the board, handPower = 2 plays like handPower>2; handPower = 1 then play it like it ;D
+            else if (handPower == 2 && !hasPairOnBoard && !FlopLogic.dangerousFlop2(deskCards)) {
+                rise(pot * 2);
+            } else if (handPower == 1 && hasPairOnBoard) {
+                check();
+            } else if (handPower == 1 && !hasPairOnBoard) {
+                playPair(hasPairOnBoard);
+            }
+
+
+
         }
         else if (gameRound.equalsIgnoreCase("five_cards")) {
+            int handPower = FlopLogic.getCombinationPower(cardCombination);
+            System.out.println("Hand Power: " + handPower);
+            int riseAmount = 0;
+            boolean someoneHasRaised = false;
+            for (Player player : players) {
+                if (player.getBet() > riseAmount && player.status.equalsIgnoreCase("rise")) {
+                    riseAmount = player.getBet();
+                    someoneHasRaised = true;
+                }
+            }
+            boolean hasPairOnBoard = hasPairOnBoard();
 
-            riverLogic();
+            //TODO: if hand is set or stronger, check if there is raise before us call, if there is no raise bet half pot
+            if (handPower == 3) {
+                //TODO: extract method from this code: check if there is raise before us call, if there is no raise bet half pot
+                if (someoneHasRaised) {
+                    call();
+                } else {
+                    rise(pot);;
+                }
+            }
 
+            else if (handPower > 3) {
+                //TODO: extract method from this code: check if there is raise before us call, if there is no raise bet half pot
+                rise(pot * 2);
+            }
+
+            //TODO: if there is pair on board and we have handPower = 2 then play hand like we have only one pair, if we have handPower = 1 then check/fold
+            else if (handPower == 2 && hasPairOnBoard) {
+                playPair(hasPairOnBoard);
+            }
+
+            //TODO: if there is no pair on the board, handPower = 2 plays like handPower>2; handPower = 1 then play it like it ;D
+            else if (handPower == 2 && !hasPairOnBoard && !FlopLogic.dangerousFlop2(deskCards)) {
+                rise(pot * 2);
+            } else if (handPower == 1 && hasPairOnBoard) {
+                check();
+            } else if (handPower == 1 && !hasPairOnBoard) {
+                playPair(hasPairOnBoard);
+            }
         }
     }
 
@@ -578,40 +663,11 @@ public class Client {
     private void playPair(boolean hasPairOnBoard) throws IOException {
         String myPlayerPairValue = getMyPlayerPairValue();
 
-        Map<String, Integer> risersAndCallers = countRaisersAndCallers();
-        if (hasPairOnBoard) {
-            if (risersAndCallers.get("risers") == 0 && risersAndCallers.get("allIn") == 0) {
-                rise((pot * 0.5));;
-
-            }
-            //if someone re-raise us, we call
-            else if (risersAndCallers.get("risers") == 1 && risersAndCallers.get("callers") == 0 && risersAndCallers.get("allIn") == 0 && iHaveRaised) {
-                call();
-            } else {
-               check();
-            }
+        if(hasStrongestPairOnBoard(myPlayerPairValue) && !FlopLogic.dangerousFlop2(deskCards)){
+            rise(pot);
         }
-        else {
-            if (hasStrongestPairOnBoard(myPlayerPairValue)) {
-                if (risersAndCallers.get("risers") == 0 && risersAndCallers.get("allIn") == 0) {
-                    rise(pot * 0.5);
-                }
-                else if(risersAndCallers.get("risers") == 1){
-                    call();
-                }
-                else if (risersAndCallers.get("risers") > 1
-                        || risersAndCallers.get("allIn") > 1) {
-                    fold();
-                }
-                else if(getRiseAmount() > pot || FlopLogic.dangerousFlop(deskCards, 3)){
-                    fold();
-                }
-                else if(getRiseAmount() <= pot && !FlopLogic.dangerousFlop(deskCards, 3)){
-                    call();
-                } else {
-                   fold();
-                }
-            }
+        else{
+            check();
         }
     }
 

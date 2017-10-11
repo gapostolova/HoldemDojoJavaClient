@@ -7,6 +7,27 @@ public class FlopLogic {
 
     private static List<String> cardsOrder = Arrays.asList("A","2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A");
 
+    public static boolean dangerousFlop2(List<Client.Card> deskCards){
+        boolean isDangerous = false;
+
+        List<Integer> deskCardsIndexes = new ArrayList<>();
+
+        for(Client.Card card : deskCards){
+            deskCardsIndexes.add(PreFlopLogic.cardsOrder.indexOf(card.getValue()));
+        }
+
+        Collections.sort(deskCardsIndexes);
+
+        if((deskCardsIndexes.get(2) - deskCardsIndexes.get(1)) == 1 && (deskCardsIndexes.get(1) - deskCardsIndexes.get(0)) == 1){
+            isDangerous = true;
+        }
+
+        if(deskCards.get(0).getSuit().equalsIgnoreCase(deskCards.get(1).getSuit()) && deskCards.get(1).getSuit().equalsIgnoreCase(deskCards.get(2).getSuit())){
+            isDangerous = true;
+        }
+
+        return isDangerous;
+    }
 
     public static int getCombinationPower(String combination){
         List<String> possibleCombinations = Client.getCardCombinations();
