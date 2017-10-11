@@ -39,6 +39,8 @@ public class Client {
     private org.eclipse.jetty.websocket.WebSocket.Connection connection;
 
     private static List<Client> gameHistory;
+    private static boolean iHaveRaised = false;
+    private static String currRound = "";
 
     List<Card> deskCards;
 
@@ -259,6 +261,16 @@ public class Client {
 //            gameHistory = new ArrayList<>();
 //        }
 
+        if(myPlayer.getStatus().equalsIgnoreCase("rise")){
+            iHaveRaised = true;
+        }
+        if(currRound.equalsIgnoreCase("") || !currRound.equalsIgnoreCase(gameRound)){
+            currRound = gameRound;
+            iHaveRaised = false;
+        }
+
+
+
     }
 
     private List<String> parseEvent(JSONArray eventJSON) {
@@ -435,6 +447,11 @@ public class Client {
         else if(gameRound.equalsIgnoreCase("four_cards")) {
 //            System.out.println("TURN");
             this.makeTurnMove();
+        }
+
+        else if(gameRound.equalsIgnoreCase("five_cards")) {
+            //TODO: Check if handpower > 2, if true -> check if there is raiser before us if true -> check if flop is dangerous(4 cards same suit, 4 sequential cards), if is dangerous then call, else if not dangerous then raise 1/2 * pot, (*)
+            //TODO: (*) if nobody has raised then raise 1/2 * pot,
         }
 
     }
