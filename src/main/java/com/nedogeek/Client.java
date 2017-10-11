@@ -31,8 +31,8 @@ public class Client {
         return cardCombinations;
     }
 
-    private static final String userName = "Ronaldo";
-    private static final String password = "somePassword";
+    private static final String userName = "RonaldoCR7";
+    private static final String password = "ronaldo2";
 
 
     private static final String SERVER = "ws://10.22.40.111:8080/ws";
@@ -111,8 +111,8 @@ public class Client {
                 public void onMessage(String data) {
                     parseMessage(data);
 
-//                System.out.println( "#############################################################################################################################################################################################################");
-//                System.out.println(data+"\n");
+                System.out.println( "#############################################################################################################################################################################################################");
+                System.out.println(data+"\n");
 
                     if (userName.equals(mover)) {
                         try {
