@@ -183,7 +183,6 @@ public class FlopLogic {
 
     }
 
-
     //returns true if ace in the sequence
     private static int aceCalculation(int card1, int card2){
         int aceAtBeginning = card1 - card2;
@@ -217,7 +216,6 @@ public class FlopLogic {
         }
         return true;
     }
-
 
 
 }

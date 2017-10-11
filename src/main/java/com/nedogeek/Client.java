@@ -113,8 +113,8 @@ public class Client {
                 public void onMessage(String data) {
                     parseMessage(data);
 
-                System.out.println( "#############################################################################################################################################################################################################");
-                System.out.println(data+"\n");
+                    System.out.println("#############################################################################################################################################################################################################");
+                    System.out.println(data + "\n");
 
                     if (userName.equals(mover)) {
                         try {
@@ -261,14 +261,13 @@ public class Client {
 //            gameHistory = new ArrayList<>();
 //        }
 
-        if(myPlayer.getStatus().equalsIgnoreCase("rise")){
+        if (myPlayer.getStatus().equalsIgnoreCase("rise")) {
             iHaveRaised = true;
         }
-        if(currRound.equalsIgnoreCase("") || !currRound.equalsIgnoreCase(gameRound)){
+        if (currRound.equalsIgnoreCase("") || !currRound.equalsIgnoreCase(gameRound)) {
             currRound = gameRound;
             iHaveRaised = false;
         }
-
 
 
     }
@@ -370,18 +369,15 @@ public class Client {
                 Random r = new Random();
                 int randomRise = r.nextInt(3) + 1;
                 connection.sendMessage(Commands.Rise.toString() + "," + (riseAmount * randomRise));
-            }
-            else if(myPlayer.getBalance() / 5 >= riseAmount && (PreFlopLogic.hasAceAndStrongCard(card1, card2, "J") || PreFlopLogic.hasKingAndStrongCard(card1, card2, "Q") ||
-                    PreFlopLogic.hasHandStrongerThan(card1, card2, "9") || (PreFlopLogic.hasCardsStrongerThan(card1, card2, "8") && PreFlopLogic.hasPairSuit(card1, card2)))){
+            } else if (myPlayer.getBalance() / 5 >= riseAmount && (PreFlopLogic.hasAceAndStrongCard(card1, card2, "J") || PreFlopLogic.hasKingAndStrongCard(card1, card2, "Q") ||
+                    PreFlopLogic.hasHandStrongerThan(card1, card2, "9") || (PreFlopLogic.hasCardsStrongerThan(card1, card2, "8") && PreFlopLogic.hasPairSuit(card1, card2)))) {
                 connection.sendMessage(Commands.Call.toString());
             }
             // get bet value, if bet value is more than 20% from your balance play "all-in" with QQ+, AK
             else if (myPlayer.getBalance() / 5 < riseAmount && (PreFlopLogic.hasHandStrongerThan(card1, card2, "Q") || PreFlopLogic.hasAceAndStrongCard(card1, card2, "K"))) {
                 connection.sendMessage(Commands.AllIn.toString());
             }
-        }
-
-        else if (gameRound.equalsIgnoreCase("three_cards")) {
+        } else if (gameRound.equalsIgnoreCase("three_cards")) {
             int riseAmount = 0;
             boolean someoneHasRaised = false;
             for (Player player : players) {
@@ -397,34 +393,28 @@ public class Client {
             //TODO: if hand is set or stronger, check if there is raise before us call, if there is no raise bet half pot
             if (handPower > 2) {
                 //TODO: extract method from this code: check if there is raise before us call, if there is no raise bet half pot
-                if(someoneHasRaised){
+                if (someoneHasRaised) {
                     connection.sendMessage(Commands.Call.toString());
-                }
-                else{
+                } else {
                     connection.sendMessage(Commands.Rise.toString() + "," + (pot * 0.5));
                 }
             }
 
             //TODO: if there is pair on board and we have handPower = 2 then play hand like we have only one pair, if we have handPower = 1 then check/fold
-            else if(handPower == 2 && hasPairOnBoard){
+            else if (handPower == 2 && hasPairOnBoard) {
                 playPair(hasPairOnBoard);
             }
 
             //TODO: if there is no pair on the board, handPower = 2 plays like handPower>2; handPower = 1 then play it like it ;D
-            else if(handPower == 2 && !hasPairOnBoard){
-                if(someoneHasRaised){
+            else if (handPower == 2 && !hasPairOnBoard) {
+                if (someoneHasRaised) {
                     connection.sendMessage(Commands.Call.toString());
-                }
-                else{
+                } else {
                     connection.sendMessage(Commands.Rise.toString() + "," + (pot * 0.5));
                 }
-            }
-
-            else if(handPower == 1 && hasPairOnBoard){
+            } else if (handPower == 1 && hasPairOnBoard) {
                 connection.sendMessage(Commands.Check.toString());
-            }
-
-            else if(handPower == 1 && !hasPairOnBoard){
+            } else if (handPower == 1 && !hasPairOnBoard) {
                 playPair(hasPairOnBoard);
             }
 
@@ -434,29 +424,45 @@ public class Client {
             //TODO: if pair is lower than high card on the board check or fold
 
             else {
-                //TODO check straight and flush chance
-                connection.sendMessage(Commands.Check.toString());
-            }
+                String deskCard1 = deskCards.get(0).getValue();
+                String deskCard2 = deskCards.get(1).getValue();
+                String deskCard3 = deskCards.get(2).getValue();
+                String heroCard1 = card1.getValue();
+                String heroCard2 = card1.getValue();
 
-            //TODO dangerous*
-            //TODO: 3 cards same suit - check
-            //TODO: if straight or flush chance, if there is raise, check if raise is < 2/3 of the pot call , else fold, if there isn't raise -> check
-            //TODO:
-            //TODO:
-        }
-        else if(gameRound.equalsIgnoreCase("four_cards")) {
+                List<String> cards = Arrays.asList(heroCard1, heroCard2, deskCard1, deskCard2, deskCard3);
+                int sequentialCards = FlopLogic.sequentialCards(cards);
+
+                boolean haveFlushDraw = FlopLogic.sameSuit(Arrays.asList(heroCard1, heroCard2, deskCard1, deskCard2)) ||
+                        FlopLogic.sameSuit(Arrays.asList(heroCard1, heroCard2, deskCard2, deskCard3)) ||
+                        FlopLogic.sameSuit(Arrays.asList(heroCard1, heroCard2, deskCard1, deskCard3));
+
+                //TODO check straight or flush chance, if it's false - Check
+                if (sequentialCards < 4 || !haveFlushDraw) {
+                    connection.sendMessage(Commands.Check.toString());
+                }
+                //TODO: if it's true -> check if we have raiser before us
+                else {
+                    if (someoneHasRaised && !iHaveRaised) {
+                        connection.sendMessage(Commands.Call.toString());
+                    } else if (!someoneHasRaised){
+                        connection.sendMessage(Commands.Rise.toString() + "," + (pot * 0.5));
+                    }
+                    else                    {
+                        connection.sendMessage(Commands.Fold.toString());
+                    }
+                }
+            }
+        } else if (gameRound.equalsIgnoreCase("four_cards")) {
 //            System.out.println("TURN");
             this.makeTurnMove();
-        }
-
-        else if(gameRound.equalsIgnoreCase("five_cards")) {
+        } else if (gameRound.equalsIgnoreCase("five_cards")) {
             //TODO: Check if handpower > 2, if true -> check if there is raiser before us if true -> check if flop is dangerous(4 cards same suit, 4 sequential cards), if is dangerous then call, else if not dangerous then raise 1/2 * pot, (*)
             //TODO: (*) if nobody has raised then raise 1/2 * pot,
         }
-
     }
 
-    private int getRiseAmount(){
+    private int getRiseAmount() {
         int riseAmount = 0;
         for (Player player : players) {
             if (player.getBet() - 20 > riseAmount && player.status.equalsIgnoreCase("rise")) {
@@ -467,12 +473,12 @@ public class Client {
         return riseAmount;
     }
 
-    private boolean hasPairOnBoard(){
-        for(int i = 0; i < deskCards.size() - 1; i++){
+    private boolean hasPairOnBoard() {
+        for (int i = 0; i < deskCards.size() - 1; i++) {
             Card card1 = deskCards.get(i);
-            for(int j = i + 1; j < deskCards.size(); j++){
+            for (int j = i + 1; j < deskCards.size(); j++) {
                 Card card2 = deskCards.get(j);
-                if(card1.getValue().equalsIgnoreCase(card2.getValue())){
+                if (card1.getValue().equalsIgnoreCase(card2.getValue())) {
                     return true;
                 }
             }
@@ -480,21 +486,20 @@ public class Client {
         return false;
     }
 
-    private String getMyPlayerPairValue(){
+    private String getMyPlayerPairValue() {
         Card myPlayerCard1 = myPlayer.getCards().get(0);
         Card myPlayerCard2 = myPlayer.getCards().get(1);
 
         String myPlayerPairValue = "";
-        if(myPlayerCard1.getValue().equalsIgnoreCase(myPlayerCard2.getValue())){
+        if (myPlayerCard1.getValue().equalsIgnoreCase(myPlayerCard2.getValue())) {
             myPlayerPairValue = myPlayerCard1.getValue();
-        }
-        else{
-            for(Card currentDeskCard : deskCards){
-                if(myPlayerCard1.getValue().equalsIgnoreCase(currentDeskCard.getValue())){
+        } else {
+            for (Card currentDeskCard : deskCards) {
+                if (myPlayerCard1.getValue().equalsIgnoreCase(currentDeskCard.getValue())) {
                     myPlayerPairValue = myPlayerCard1.getValue();
                     break;
                 }
-                if(myPlayerCard2.getValue().equalsIgnoreCase(currentDeskCard.getValue())){
+                if (myPlayerCard2.getValue().equalsIgnoreCase(currentDeskCard.getValue())) {
                     myPlayerPairValue = myPlayerCard1.getValue();
                     break;
                 }
@@ -507,41 +512,31 @@ public class Client {
     private void playPair(boolean hasPairOnBoard) throws IOException {
         String myPlayerPairValue = getMyPlayerPairValue();
 
-        int foldCounter = 0;
-        for(Player currentPlayer : players){
-            if(currentPlayer.getStatus().equalsIgnoreCase("fold")){
-                foldCounter++;
-            }
-        }
-        int notFoldedPlayers = players.size() - foldCounter;
-
         Map<String, Integer> risersAndCallers = countRaisersAndCallers();
-        if(hasPairOnBoard){
-            if(risersAndCallers.get("risers") == 0 && risersAndCallers.get("allIn") == 0){
+        if (hasPairOnBoard) {
+            if (risersAndCallers.get("risers") == 0 && risersAndCallers.get("allIn") == 0) {
                 connection.sendMessage(Commands.Rise.toString() + "," + (pot * 0.5));
 
             }
-            else{
+            //if someone re-raise us, we call
+            else if (risersAndCallers.get("risers") == 1 && risersAndCallers.get("callers") == 0 && risersAndCallers.get("allIn") == 0 && iHaveRaised) {
+                connection.sendMessage(Commands.Call.toString());
+            } else {
                 connection.sendMessage(Commands.Check.toString());
             }
-        }
-        else{
-            if(hasStrongestPairOnBoard(myPlayerPairValue)){
-                if(risersAndCallers.get("risers") == 0 && risersAndCallers.get("allIn") == 0){
+        } else {
+            if (hasStrongestPairOnBoard(myPlayerPairValue)) {
+                if (risersAndCallers.get("risers") == 0 && risersAndCallers.get("allIn") == 0) {
                     connection.sendMessage(Commands.Rise.toString() + "," + (pot * 0.5));
-                }
-                else if(risersAndCallers.get("risers") > 1
+                } else if (risersAndCallers.get("risers") > 1
                         || risersAndCallers.get("allIn") > 1
-                        || (risersAndCallers.get("risers") == 1) && (risersAndCallers.get("callers") > 0)){
+                        || (risersAndCallers.get("risers") == 1) && (risersAndCallers.get("callers") > 0)) {
                     connection.sendMessage(Commands.Fold.toString());
-                }
-                else if(getRiseAmount() > pot || FlopLogic.dangerousFlop(deskCards)){
+                } else if (getRiseAmount() > pot || FlopLogic.dangerousFlop(deskCards)) {
                     connection.sendMessage(Commands.Fold.toString());
-                }
-                else if(getRiseAmount() <= pot && !FlopLogic.dangerousFlop(deskCards)){
+                } else if (getRiseAmount() <= pot && !FlopLogic.dangerousFlop(deskCards) && !iHaveRaised) {
                     connection.sendMessage(Commands.Call.toString());
-                }
-                else{
+                } else {
                     connection.sendMessage(Commands.Fold.toString());
                 }
             }
@@ -549,13 +544,12 @@ public class Client {
     }
 
 
-
-    private boolean hasStrongestPairOnBoard(String myPlayerPairValue){
+    private boolean hasStrongestPairOnBoard(String myPlayerPairValue) {
         int myPlayerPairValueIndex = PreFlopLogic.cardsOrder.indexOf(myPlayerPairValue);
 
         int strongestCardOnBoardIndex = 0;
-        for(Card currentCard : deskCards){
-            if(PreFlopLogic.cardsOrder.indexOf(currentCard.getValue()) > strongestCardOnBoardIndex){
+        for (Card currentCard : deskCards) {
+            if (PreFlopLogic.cardsOrder.indexOf(currentCard.getValue()) > strongestCardOnBoardIndex) {
                 strongestCardOnBoardIndex = PreFlopLogic.cardsOrder.indexOf(currentCard.getValue());
             }
         }
@@ -563,22 +557,21 @@ public class Client {
         return myPlayerPairValueIndex >= strongestCardOnBoardIndex;
     }
 
-    private boolean checkForPairOnBoard(){
-        for(int i=0; i<this.deskCards.size()-1; i++)
-        {
+    private boolean checkForPairOnBoard() {
+        for (int i = 0; i < this.deskCards.size() - 1; i++) {
             Card currentCard = this.deskCards.get(i);
-            for(int j=1; j<this.deskCards.size(); j++)
-            if(currentCard.value == this.deskCards.get(j).value){
-                return true;
-            }
+            for (int j = 1; j < this.deskCards.size(); j++)
+                if (currentCard.value == this.deskCards.get(j).value) {
+                    return true;
+                }
         }
 
         return false;
     }
 
     //count people that have been played before us
-    private Map<String,Integer> countRaisersAndCallers(){
-        Map<String,Integer> results = new HashMap<String, Integer>();
+    private Map<String, Integer> countRaisersAndCallers() {
+        Map<String, Integer> results = new HashMap<String, Integer>();
 
         int risers = 0;
         int callers = 0; //people that made call after rise of another person
@@ -586,11 +579,9 @@ public class Client {
         for (Player player : this.players) {
             if (player.getStatus().equalsIgnoreCase("rise") && player.getBet() > 0) {
                 risers++;
-            }
-            else if(player.status.equalsIgnoreCase("call") && risers>0){
+            } else if (player.status.equalsIgnoreCase("call") && risers > 0) {
                 callers++;
-            }
-            else if (player.getStatus().equalsIgnoreCase("allin")){
+            } else if (player.getStatus().equalsIgnoreCase("allin")) {
                 allIn++;
             }
         }
@@ -602,7 +593,7 @@ public class Client {
         return results;
     }
 
-    private void makeTurnMove() throws IOException{
+    private void makeTurnMove() throws IOException {
         int handPower = FlopLogic.getCombinationPower(cardCombination);
         Map<String, Integer> actions = this.countRaisersAndCallers();
         int risers = actions.get("risers");
@@ -615,26 +606,23 @@ public class Client {
 //        System.out.println("risers " + risers + ", callers " + risers + ", allIn " + risers);
 //        System.out.println("Board " + deskCards);
 
-        if(handPower == 0 || (handPower == 1 && this.checkForPairOnBoard())){
-            if(risers == 0 && callers == 0 && allIn == 0 ){
-                command =Commands.Check.toString();
+        if (handPower == 0 || (handPower == 1 && this.checkForPairOnBoard())) {
+            if (risers == 0 && callers == 0 && allIn == 0) {
+                command = Commands.Check.toString();
             }
         }
         //TODO: add check if pair is with the biggest card on the board or stronger
-        else if ((handPower == 1 && !this.checkForPairOnBoard()) || (handPower == 2 && this.checkForPairOnBoard())){
-            if(risers == 0 && callers == 0 && allIn == 0 ) {
-                command = Commands.Rise.toString()+ "," + (0.5*pot);
-            }
-            else if(risers == 1 && callers == 0 && allIn == 0) {
+        else if ((handPower == 1 && !this.checkForPairOnBoard()) || (handPower == 2 && this.checkForPairOnBoard())) {
+            if (risers == 0 && callers == 0 && allIn == 0) {
+                command = Commands.Rise.toString() + "," + (0.5 * pot);
+            } else if (risers == 1 && callers == 0 && allIn == 0) {
                 command = Commands.Call.toString();
             }
-        }
-        else if(handPower > 1) {
-            if(risers == 0 && callers == 0 && allIn == 0 ){
-                command =Commands.Rise.toString()+ "," + (0.5*pot);
-            }
-            else{
-                command =Commands.AllIn.toString();
+        } else if (handPower > 1) {
+            if (risers == 0 && callers == 0 && allIn == 0) {
+                command = Commands.Rise.toString() + "," + (0.5 * pot);
+            } else {
+                command = Commands.AllIn.toString();
             }
         }
 
